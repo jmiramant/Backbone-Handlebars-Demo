@@ -1,0 +1,37 @@
+<html>
+  <head>
+    <title>Handlebars Demo</title>
+    <script src="libs/underscore-min.js" type="text/javascript"></script>
+    <script src="libs/backbone-min.js" type="text/javascript"></script>
+    <script src="libs/handlebars-1.0.0.beta.6.js" type="text/javascript"></script>
+    <script src="libs/jquery.min.js" type="text/javascript"></script>
+  </head>
+  <body>
+    <div id="content-placeholder" style="width:600px; height:800px; background-color:#EEE;">
+    </div>
+  </body>
+    
+  <script type="text/javascript" charset="utf-8">
+    var source, template, context, html;
+    context = {
+      title: "Developers", 
+      people: [
+        {name: "Kyle", role: "Front-end"}, 
+        {name: "Cody", role: "Back-end"}, 
+        {name: "Colin"}
+      ]
+    };
+    
+    $(document).ready(function() {
+      $.get('templates/demo.handlebars', function(data) {
+        source = data;
+        template  = Handlebars.compile(source);
+        html = template(context);
+        $('#content-placeholder').html(html);
+      });
+
+    });
+  </script>
+  
+
+</html>

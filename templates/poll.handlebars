@@ -1,0 +1,13 @@
+<h2>{{location}}</h2>
+<div class="content">
+  <div class="poll-question">{{question}}</div>
+  {{#each answers}}
+  <div class="poll-answer">{{this}}</div>
+  {{/each}}
+</div>
+{{#if back}}
+<a class="back-link" data-next="{{back}}">&lt; -</a>
+{{/if}}
+{{#if next}}
+<a class="next-link" data-next="{{next}}">- &gt;</a>
+{{/if}}

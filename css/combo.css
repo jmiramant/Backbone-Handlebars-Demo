@@ -1,0 +1,38 @@
+#content-holder {
+  width:500px; 
+  height:600px; 
+  padding:25px; 
+  font-family:Helvetica; 
+  background-color:white; 
+  border:solid 1px #999; 
+  box-shadow:4px 4px #CCC; 
+  border-radius:5px;
+  text-align:center;
+}
+
+.back-link {
+  float:left;
+}
+
+.next-link {
+  float:right;
+}
+
+.poll-answer {
+  margin:10px 140px;
+  line-height:35px;
+  height:35px;
+  background-color:#EEE;
+  text-align:center;
+}
+
+.poll-answer:hover, .poll-answer-on {
+  background-color:orange;
+  color:white;
+  font-weight:bold;
+}
+
+h2 {
+  text-align:right;
+  padding-bottom:15px;
+}

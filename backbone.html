@@ -1,0 +1,81 @@
+<html>
+  <head>
+    <title>Backbone Demo</title>
+    <script src="libs/underscore-min.js" type="text/javascript"></script>
+    <script src="libs/backbone-min.js" type="text/javascript"></script>
+    <script src="libs/handlebars-1.0.0.beta.6.js" type="text/javascript"></script>
+    <script src="libs/jquery.min.js" type="text/javascript"></script>
+  </head>
+  <body>
+    <div id="content" style="width:400px; height:300px; border:solid 1px black;">
+    </div>
+    <a href="" class="prompter" data-id="1">Dev #1</a>
+    <a href="" class="prompter" data-id="2">Dev #2</a>
+    <a href="" class="prompter" data-id="3">Dev #3</a>
+    <a href="" class="prompter" data-id="4">New</a>
+  </body>
+  
+  <script type="text/javascript">
+    $(document).ready(function() {
+      var Developer = Backbone.Model.extend({
+        promptName: function() {
+          var n = prompt("Please enter developer's name:")
+          this.set({name: (n.toLowerCase() === "adam" ? "n/a" : n ) });
+        }
+      });
+
+      var DevTeam = Backbone.Collection.extend({
+        model: Developer,
+        getManager: function() {
+          return team.find(function(a){ return a.get("role") === "Manager"; });
+        }
+      });
+
+      window.dev = new Developer();
+      window.team = new DevTeam([
+        { id:1, name: "Kyle", role: "Front-End", languages: ["ActionScript", "Javascript"] },
+        { id:2, name: "Colin", role: "Back-End", languages: ["Ruby", "Javascript"] },
+        { id:3, name: "Cody", role: "Back-End", languages: ["Ruby"] },
+        { id:4, name: "Drew", role: "Designer", languages: ["Javascript"] },
+        { id:5, name: "Austin", role: "SysApe", languages: [] },
+        { id:6, name: "Adam", role: "Manager", languages: ["Ruby", "Javascript"] }
+      ]);
+
+      dev.on('change:name', function(model) {
+        
+        $('#content').html("Developer: " + model.get("name"));
+      });
+      
+      dev.set(team.getManager());
+
+      var AppRouter = Backbone.Router.extend({
+        routes:{
+          "":"newDev",
+          "dev/:id":"getDev"
+        },
+
+        newDev : function() {
+          window.dev.promptName();
+        },
+        
+        getDev : function(id) {
+          if (id < team.length) {
+            window.dev.set(window.team.get(id));
+          } 
+          else {
+            this.navigate("", true);
+          }
+        }        
+      });
+      
+      var app = new AppRouter();
+      
+      $(".prompter").on("click", function() {
+        app.navigate("dev/" + $(this).attr("data-id"), true);
+        return false;
+      });
+      
+      Backbone.history.start({pushState:true});
+    });
+  </script>
+</html>

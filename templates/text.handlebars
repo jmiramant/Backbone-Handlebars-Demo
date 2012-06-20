@@ -1,0 +1,11 @@
+<h2>{{location}}</h2>
+<div class="content">
+  <!-- triple mustache for just dumping in raw HTML -->
+  {{{html}}}
+</div>
+{{#if back}}
+<a class="back-link" data-next="{{back}}">&lt; -</a>
+{{/if}}
+{{#if next}}
+<a class="next-link" data-next="{{next}}">- &gt;</a>
+{{/if}}
