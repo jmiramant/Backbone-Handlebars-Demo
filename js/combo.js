@@ -1,104 +1,107 @@
-$(document).ready(function() {
-  
-  // Fetch data from server -- obviously this can be optimized instead of getting it all at once
-  $.get('/api', function(data) {
-    
-    window.templates = {};
-    // Load handlebars templates from server
-    loadTemplate('text');
-    loadTemplate('poll');
-    loadTemplate('image');
-    
-    // Backbone Model
-    var Page = Backbone.Model.extend({
-      
-      // Renders the current model on the page inside the content holder
-      render: function() {
-        var p = window.page;
-        var type = p.get("type");
-        
-        // Sketchy check to see if the external template file has loaded. 
-        // If not, wait a half second and try again
-        if (templates[type] === undefined) {
-          $("#content-holder").html("<img src='/images/loading.gif' />")
-          setTimeout(window.page.render, 500);
-        } else {
-          // Template loaded, fill in the template with this model's data
-          $("#content-holder").html(templates[type](p.toJSON()));
-          renderHelpers(type);
-        }
-      }
-    });
+// Namespace our app, setup a few things
+window.App = {
+  currentPage: null,
+  helpers: {},
+  templates: {}
+};
 
-    // Backbone Collection
-    var PageCollection = Backbone.Collection.extend({
-      model: Page,
-      
-      // Function simply returns the first page in the collection, called on page load
-      getFirst: function() {
-        return this.find(function(a){ return a.get("id") === 1; });
-      },
-      
-      getPage: function(id) {
-        return this.find(function(a){ return a.get("id") === parseInt(id); });
-      }
-    });
-    
-    // Instantiate model/collection
-    window.pages = new PageCollection(data);
-    window.page = new Page();
+(function(App){
+  // Backbone Model
+  App.Page = Backbone.Model.extend({});
 
-    
-    var AppRouter = Backbone.Router.extend({
-      routes:{
-        "":"getFirst",
-        ":id":"getPage"
-      },
-      
-      getFirst : function() {
-        console.log("hey");
-        window.page.set(window.pages.getFirst());
-        window.page.render();        
-      },
+  App.PageView = Backbone.View.extend({
+    initialize: function(options) {
+      this.template = App.templates[this.model.get('type')];
+    },
 
-      getPage : function(id) {
-        console.log(id);
-        window.page.set(window.pages.getPage(id));
-        window.page.render();
-      }        
-    });
+    // These events get automatically attached to this.el
+    events: {
+      'click .poll-answer': 'selectAnswer',
+      'click .next-link,.back-link': 'navigate'
+    },
 
-    window.router = new AppRouter();
-    
-    Backbone.history.start({pushState:false});
+    selectAnswer: function(e){
+      this.$(".poll-answer").removeClass("poll-answer-on");
+      this.$(e.target).addClass("poll-answer-on");
+    },
+
+    navigate: function(e) {
+      var href = "/" + $(e.target).data('next');
+      App.router.navigate(href, true);
+      e.preventDefault();
+    },
+
+    // Renders the current model on the page inside the content holder
+    render: function() {
+      var html = this.template(this.model.toJSON());
+      $(this.el).html(html);
+      return this;
+    }
   });
 
-});
-
-function renderHelpers(pageType) {
-  $(".next-link, .back-link").each(function(){
-    $(this)
-    .attr("href", ("#" + $(this).attr("data-next")))
-    .on("click", function(){
-      window.router.navigate("/" + $(this).attr("data-next"), true);
-      return false;
-    });
+  // Backbone Collection
+  App.PageCollection = Backbone.Collection.extend({
+    model: App.Page,
+    url: '/pages'
   });
-  
-  switch (pageType) {
-    case 'poll':
-      $(".poll-answer")
-      .on("click", function(){
-        $(".poll-answer").removeClass("poll-answer-on");
-        $(this).addClass("poll-answer-on");
-      });
-    default:
-      break;
+
+  App.AppRouter = Backbone.Router.extend({
+    routes:{
+      "":    "getFirst",
+      ":id": "getPage"
+    },
+
+    getFirst : function() {
+      var page = App.currentPage = App.pages.first();
+      this.showPage(page);
+    },
+
+    getPage : function(id) {
+      var page = App.currentPage = App.pages.get(id);
+      this.showPage(page);
+    },
+
+    showPage: function(page) {
+      var view = new App.PageView({model: page});
+      $("#content-holder").html(view.render().el);
+    }
+  });
+
+  // A bit janky to load this shit up front syncronously. 
+  // but for now prevents the Views from having to know about
+  // them not being loaded.
+  App.helpers.loadTemplate = function loadTemplate(name) {
+    $.ajax({
+      url: 'templates/' + name + '.handlebars',
+      async: false,
+      success: function(tmplStr) {
+        App.templates[name] = Handlebars.compile(tmplStr);
+      }
+    });
   }
-}
-   
-function loadTemplate(name) {
-  $.get('templates/' + name + '.handlebars', function(data) {
-    window.templates[name] = Handlebars.compile(data);
-  });
-} 
+
+
+
+  App.start = function(){
+    //Synchronous calls for the templates...
+    App.helpers.loadTemplate('text');
+    App.helpers.loadTemplate('poll');
+    App.helpers.loadTemplate('image');
+
+    // Instantiate the pages collection
+    App.pages = new App.PageCollection;
+    App.router = new App.AppRouter();
+
+    //Fetch the data from the server
+    App.pages.fetch({
+      success: function(){
+        Backbone.history.start({pushState: true});
+      }
+    });
+  }
+
+})(App);
+
+$(document).ready(function() {
+  App.start();
+});

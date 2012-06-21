@@ -59,6 +59,9 @@ app.configure('production', function(){
 app.get('/demo', function(req, res){
   res.sendfile("combo.html");
 });
+app.get('/', function(req, res){
+  res.sendfile("combo.html");
+});
 
 app.get('/demo/*', function(req, res){
   //res.sendfile("combo.html");
@@ -74,12 +77,20 @@ app.get('/api', function(req, res){
   res.json(responseSet);
 })
 
+app.get('/pages', function(req, res){
+  res.json(responseSet);
+})
+
+app.get('/:id', function(req, res){
+  res.sendfile("combo.html");
+});
+
 app.get('')
 
 app.get('/*', function(req, res){
   res.sendfile(req.params);
 });
-app.get('/', routes.index);
+// app.get('/', routes.index);
 
 app.listen(3000);
 console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
